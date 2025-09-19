@@ -1,27 +1,30 @@
 import streamlit as st
 import numpy as np
-import cv2
 from tensorflow.keras.models import load_model
 from PIL import Image
 
-# Load trained model
+# Load model
 model = load_model("mnist_cnn.h5")
-class_names = [str(i) for i in range(10)]
 
-st.title("🖊️ MNIST Digit Classifier")
-st.write("Upload a handwritten digit image (28x28 pixels recommended).")
+st.title("🖊️ MNIST Digit Recognizer")
+st.write("Draw a digit (0–9) in the box below and let the model predict!")
 
-uploaded_file = st.file_uploader("Choose an image...", type=["png","jpg","jpeg"])
+canvas = st.canvas(
+    fill_color="white",
+    stroke_width=10,
+    stroke_color="black",
+    background_color="white",
+    height=200,
+    width=200,
+    drawing_mode="freedraw",
+    key="canvas",
+)
 
-if uploaded_file is not None:
-    # Convert to grayscale and preprocess
-    image = Image.open(uploaded_file).convert("L")
-    img_array = np.array(image.resize((28,28)))
-    img_array = img_array / 255.0
-    img_array = np.expand_dims(img_array, axis=(0,-1))
+if canvas.image_data is not None:
+    img = Image.fromarray((canvas.image_data[:, :, :3]).astype(np.uint8))  # drop alpha channel
+    img = img.convert("L").resize((28, 28))  # grayscale + resize
+    img_array = np.array(img) / 255.0
+    img_array = img_array.reshape(1, 28, 28, 1)
 
-    # Predict
     pred = model.predict(img_array)
-    label = class_names[np.argmax(pred)]
-
-    st.image(image, caption=f"Prediction: {label}", width=150)
+    st.write(f"**Prediction:** {np.argmax(pred)}")
