@@ -4,4 +4,3 @@ numpy
 pillow
 streamlit-drawable-canvas
 opencv-python-headless
-
